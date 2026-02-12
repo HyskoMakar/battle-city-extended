@@ -123,7 +123,7 @@ class Level(Scene):
             if isinstance(sprite, Tank):
                 self._update_tank(sprite, dt)
             elif isinstance(sprite, Bullet):
-                self._update_bullet(sprite)
+                self._update_bullet(sprite, dt)
             elif isinstance(sprite, TankSpawner):
                 self._update_spawner(sprite, dt)
     
@@ -132,8 +132,8 @@ class Level(Scene):
         if result:
             self.sprites.append(result)
     
-    def _update_bullet(self, bullet):
-        hit = bullet.update(self.sprites, 0)
+    def _update_bullet(self, bullet, dt):
+        hit = bullet.update(self.sprites, dt)
         if hit:
             self._handle_bullet_hit(bullet, hit)
     
