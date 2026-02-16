@@ -1,7 +1,8 @@
 import pygame as pg
-from sprite import Sprite
-from block import Block
-from base import Base
+from sprites.sprite import Sprite
+from sprites.blocks.block import Block
+from sprites.blocks.base import Base
+from sprites.blocks.bush import Bush
 
 class Tank(Sprite):
     def __init__(self, speed, dir, hp, reload_speed=None, reload_time=None, **kwargs):
@@ -23,6 +24,9 @@ class Tank(Sprite):
             
             if isinstance(sprite, Block) and self.rect.colliderect(sprite.rect):
                 self._resolve_collision(sprite)
+            elif isinstance(sprite, Bush) and self.rect.colliderect(sprite.rect):
+                if self.__class__.__name__ != "Player":
+                    self._resolve_collision(sprite)
             elif self._should_collide_with_solid(sprite):
                 self._resolve_collision(sprite)
 

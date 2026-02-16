@@ -1,8 +1,8 @@
 import pygame as pg
-from sprite import Sprite
-from tank import Tank
-from base import Base
-from block import Block
+from sprites.sprite import Sprite
+from sprites.tanks.tank import Tank
+from sprites.blocks.base import Base
+from sprites.blocks.block import Block
 
 class Bullet(Sprite):
     MAX_BLOCKS_DESTROYED = 2
@@ -39,8 +39,9 @@ class Bullet(Sprite):
                 sprite.hp = 0
                 return True
             elif isinstance(sprite, Base):
-                sprite.destroyed = True
-                return True
+                if self.owner.__class__.__name__ != "Player":
+                    sprite.destroyed = True
+                    return True
             elif isinstance(sprite, Block):
                 result = self._handle_block_collision(sprite, blocks_to_remove)
                 if result:

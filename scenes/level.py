@@ -1,26 +1,29 @@
 import pygame as pg
 import random
-from scene import Scene
-from block import Block
-from tank import Tank
-from player_tank import Player
-from widget import Widget
-from bullet import Bullet
-from enemy_tank import EnemyTank
-from tank_spawner import TankSpawner
-from base import Base
+from scenes.scene import Scene
+from sprites.blocks.block import Block
+from sprites.blocks.bush import Bush
+from sprites.tanks.tank import Tank
+from sprites.tanks.player_tank import Player
+from widgets.widget import Widget
+from sprites.bullet import Bullet
+from sprites.tanks.enemy_tank import EnemyTank
+from sprites.blocks.tank_spawner import TankSpawner
+from sprites.blocks.base import Base
 from generator import seed_to_level
 
 
 class Level(Scene):
-    CELL_SIZE = 48
+    CELL_SIZE = 32
     PLAYER_SPEED = 120
     ENEMY_SPEED = 90
     PLAYER_RELOAD = 0.5
     ENEMY_RELOAD = 1.5
-    SPAWNER_FIRST_DELAY = 3
-    SPAWNER_RELOAD = 8
+    SPAWNER_FIRST_DELAY = 1
+    SPAWNER_RELOAD = 5
     KILL_POINTS = 100
+    KILLS_TO_WIN = 20
+    MAX_ENEMIES = 5
     
     def __init__(self, name, seed, current_level):
         super().__init__(name)
@@ -38,9 +41,9 @@ class Level(Scene):
     
     def _init_widgets(self):
         self.widgets = [
-            Widget(name="kills", x=672, y=50, width=280, height=50, 
+            Widget(name="kills", x=480, y=50, width=280, height=50, 
                   bg_color=(50, 50, 50), text="", text_color=(255, 255, 255)),
-            Widget(name="points", x=672, y=110, width=280, height=50, 
+            Widget(name="points", x=480, y=110, width=280, height=50, 
                   bg_color=(50, 50, 50), text="", text_color=(255, 255, 255))
         ]
     
@@ -55,19 +58,28 @@ class Level(Scene):
         self._spawn_player_if_needed(lives)
     
     def _build_level(self, level_data, lives):
+        bushes = []
         for y, row in enumerate(level_data):
             for x, cell in enumerate(row):
-                self._create_cell_object(x, y, cell, lives)
+                if cell == "bu":
+                    bushes.append((x, y))
+                else:
+                    self._create_cell_object(x, y, cell, lives)
+        
+        for x, y in bushes:
+            self._create_cell_object(x, y, "bu", lives)
     
     def _create_cell_object(self, x, y, cell, lives):
         pos_x, pos_y = x * self.CELL_SIZE, y * self.CELL_SIZE
         
         if cell == "bd":
-            self._add_block(pos_x, pos_y, False, "images/bedrock.png", 3)
+            self._add_block(pos_x, pos_y, False, "images/bedrock.png", 2)
         elif cell == "st":
             self._add_steel_blocks(pos_x, pos_y)
         elif cell == "br":
             self._add_brick_blocks(pos_x, pos_y)
+        elif cell == "bu":
+            self._add_bush(pos_x, pos_y)
         elif cell == "ts":
             self._add_spawner(pos_x, pos_y)
         elif cell == "bs":
@@ -75,39 +87,50 @@ class Level(Scene):
     
     def _add_block(self, x, y, breakable, image_path, scale):
         self.sprites.append(Block(breakable=breakable, x=x, y=y, 
-                                 image_path=image_path, scale=scale))
+                                 image_path=f"assets/{image_path}", scale=scale))
     
     def _add_steel_blocks(self, x, y):
-        for dx, dy in [(0, 0), (24, 0), (0, 24), (24, 24)]:
-            self._add_block(x + dx, y + dy, False, "images/steel.png", 3)
+        for dx, dy in [(0, 0), (16, 0), (0, 16), (16, 16)]:
+            self._add_block(x + dx, y + dy, False, "images/steel.png", 2)
     
     def _add_brick_blocks(self, x, y):
-        for dx, dy in [(0, 0), (24, 0), (0, 24), (24, 24)]:
-            self._add_block(x + dx, y + dy, True, "images/bricks.png", 3)
+        for dx, dy in [(0, 0), (16, 0), (0, 16), (16, 16)]:
+            self._add_block(x + dx, y + dy, True, "images/bricks.png", 2)
+    
+    def _add_bush(self, x, y):
+        for dx, dy in [(0, 0), (16, 0), (0, 16), (16, 16)]:
+            bush = Bush(x=x + dx, y=y + dy, image_path="assets/images/bush.png", scale=2)
+            self.sprites.append(bush)
     
     def _add_spawner(self, x, y):
+        enemy_speed = self.ENEMY_SPEED + (self.current_level - 1) * 20
+        enemy_reload = max(0.5, self.ENEMY_RELOAD - (self.current_level - 1) * 0.3)
         spawner = TankSpawner(
             first_tank_spawn_time=self.SPAWNER_FIRST_DELAY,
             reload_time=self.SPAWNER_RELOAD,
-            tank_options=(self.ENEMY_SPEED, 1, self.ENEMY_RELOAD),
-            x=x, y=y, image_path="images/tank_spawner.png", scale=1.5
+            tank_options=(enemy_speed, 1, enemy_reload),
+            x=x, y=y, image_path="assets/images/tank_spawner.png", scale=1
         )
         self.spawners.append(spawner)
         self.sprites.append(spawner)
     
     def _add_base(self, x, y):
-        self.base = Base(x=x, y=y, image_path="images/base.png", scale=1.5)
+        self.base = Base(x=x, y=y, image_path="assets/images/base.png", scale=1)
         self.sprites.append(self.base)
     
     def _spawn_player_if_needed(self, lives):
         if self.player is None and self.base:
+            tank_size = 32
+            base_size = 32
+            center_x = self.base.rect.x + (base_size - tank_size) // 2
+            center_y = self.base.rect.y + (base_size - tank_size) // 2
             self.player = Player(
                 speed=self.PLAYER_SPEED, dir="top", hp=1, 
                 reload_time=self.PLAYER_RELOAD, lives=lives,
-                x=self.base.rect.x, y=self.base.rect.y,
-                image_path="images/player_tank.png", scale=3
+                x=center_x, y=center_y,
+                image_path="assets/images/player_tank.png", scale=2
             )
-            self.player_start = (self.base.rect.x, self.base.rect.y)
+            self.player_start = (center_x, center_y)
             self.sprites.append(self.player)
     
     def update(self, dt):
@@ -155,7 +178,7 @@ class Level(Scene):
     
     def _can_spawn_enemy(self, spawner):
         enemy_count = sum(1 for s in self.sprites if isinstance(s, EnemyTank))
-        return enemy_count == 0 and spawner == random.choice(self.spawners)
+        return enemy_count < self.MAX_ENEMIES and spawner == random.choice(self.spawners)
     
     def _cleanup_dead_enemies(self):
         for sprite in list(self.sprites):
@@ -173,7 +196,7 @@ class Level(Scene):
                 speed=self.PLAYER_SPEED, dir="top", hp=1,
                 reload_time=self.PLAYER_RELOAD, lives=3,
                 x=self.player_start[0], y=self.player_start[1],
-                image_path="images/player_tank.png", scale=3
+                image_path="assets/images/player_tank.png", scale=2
             )
             self.sprites.append(self.player)
     
@@ -188,9 +211,17 @@ class Level(Scene):
     def _check_game_over(self):
         if self.base and self.base.destroyed:
             return f"GAME_OVER:{self.current_level}:{self.points}"
+        if self.kills >= self.KILLS_TO_WIN:
+            return f"WIN:{self.current_level}:{self.points}"
         return ""
     
     def draw(self, screen):
         for sprite in self.sprites:
-            sprite.draw(screen)
+            if not isinstance(sprite, Bush):
+                sprite.draw(screen)
+        
+        for sprite in self.sprites:
+            if isinstance(sprite, Bush):
+                sprite.draw(screen)
+        
         super().draw(screen)

@@ -1,5 +1,5 @@
 import pygame as pg
-from sprite import Sprite
+from sprites.sprite import Sprite
 
 class Base(Sprite):
     def __init__(self, **kwargs):

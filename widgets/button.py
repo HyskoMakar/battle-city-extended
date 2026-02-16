@@ -1,5 +1,5 @@
 import pygame as pg
-from widget import Widget
+from widgets.widget import Widget
 
 class Button(Widget):
     def __init__(self, name, x, y, width, height, bg_color, text, text_color, on_click, hover_bg_color=None, hover_text_color=None):
@@ -20,7 +20,6 @@ class Button(Widget):
         self.image.blit(text_surface, text_rect)
 
     def update(self, dt=0):
-        
         mouse_pos = pg.mouse.get_pos()
         mouse_down = pg.mouse.get_pressed()[0]
 
@@ -29,11 +28,11 @@ class Button(Widget):
             self.hovered = hovered
             self.redraw()
 
-        
-        if self.hovered and mouse_down and not self._mouse_was_down:
-            self._mouse_was_down = True
-            return self.on_click
-        if not mouse_down:
+        if self.hovered and not mouse_down and self._mouse_was_down:
             self._mouse_was_down = False
+            return self.on_click
+        
+        if mouse_down:
+            self._mouse_was_down = True
 
         return ""

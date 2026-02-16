@@ -1,4 +1,4 @@
-from sprite import Sprite
+from sprites.sprite import Sprite
 
 class Block(Sprite):
     def __init__(self, breakable: bool, **kwargs):

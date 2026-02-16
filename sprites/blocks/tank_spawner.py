@@ -1,6 +1,6 @@
 import pygame as pg
-from sprite import Sprite
-from enemy_tank import EnemyTank
+from sprites.sprite import Sprite
+from sprites.tanks.enemy_tank import EnemyTank
 import random
 
 class TankSpawner(Sprite):
@@ -23,5 +23,9 @@ class TankSpawner(Sprite):
                 self.timer = self.reload_time
             
             speed, hp, reload_time = self.tank_options
-            return EnemyTank(speed=speed, hp=hp, reload_speed=reload_time, dir="bottom", x=self.rect.x, y=self.rect.y, image_path="images/enemy_tank.png", scale=3)
+            tank_size = 32
+            spawner_size = 32
+            center_x = self.rect.x + (spawner_size - tank_size) // 2
+            center_y = self.rect.y + (spawner_size - tank_size) // 2
+            return EnemyTank(speed=speed, hp=hp, reload_speed=reload_time, dir="bottom", x=center_x, y=center_y, image_path="assets/images/enemy_tank.png", scale=2)
         return None

@@ -1,7 +1,7 @@
 import pygame as pg
 import random
-from tank import Tank
-from bullet import Bullet
+from sprites.tanks.tank import Tank
+from sprites.bullet import Bullet
 
 class EnemyTank(Tank):
     MIN_MOVE_TIME = 1.0
@@ -65,7 +65,7 @@ class EnemyTank(Tank):
         return None
 
     def shoot(self):
-        bullet_x = self.rect.centerx - 12
-        bullet_y = self.rect.centery - 12
+        bullet_x = self.rect.centerx - 8
+        bullet_y = self.rect.centery - 8
         return Bullet(speed=375, dir=self.dir, owner=self, x=bullet_x, y=bullet_y, 
-                     image_path="images/bullet.png", scale=3)
+                     image_path="assets/images/bullet.png", scale=2)
