@@ -53,11 +53,18 @@ class Level(Scene):
         )
     
     def regenerate(self, lives, points, kills):
+        if self.player and hasattr(self.player, 'engine_channel') and self.player.engine_channel:
+            try:
+                self.player.engine_channel.stop()
+            except Exception:
+                pass
+        
         self.kills = kills
         self.points = points
         self.player_lives = lives
         self.sprites = []
         self.spawners = []
+        self.player = None
         
         level_data = seed_to_level(self.seed)
         self._build_level(level_data, lives)
