@@ -46,10 +46,16 @@ class Level(Scene):
             Widget(name="points", x=480, y=110, width=280, height=50, 
                   bg_color=(50, 50, 50), text="", text_color=(255, 255, 255))
         ]
+
+        self.widgets.append(
+            Widget(name="lives", x=480, y=170, width=280, height=50,
+                   bg_color=(50, 50, 50), text="", text_color=(255, 255, 255))
+        )
     
     def regenerate(self, lives, points, kills):
         self.kills = kills
         self.points = points
+        self.player_lives = lives
         self.sprites = []
         self.spawners = []
         
@@ -191,14 +197,21 @@ class Level(Scene):
         if self.player and self.player.hp <= 0:
             if self.player in self.sprites:
                 self.sprites.remove(self.player)
-            
-            self.player = Player(
-                speed=self.PLAYER_SPEED, dir="top", hp=1,
-                reload_time=self.PLAYER_RELOAD, lives=3,
-                x=self.player_start[0], y=self.player_start[1],
-                image_path="assets/images/player_tank.png", scale=2
-            )
-            self.sprites.append(self.player)
+            try:
+                self.player_lives -= 1
+            except Exception:
+                self.player_lives = max(0, getattr(self.player, 'lives', 0) - 1)
+
+            if self.player_lives > 0:
+                self.player = Player(
+                    speed=self.PLAYER_SPEED, dir="top", hp=1,
+                    reload_time=self.PLAYER_RELOAD, lives=self.player_lives,
+                    x=self.player_start[0], y=self.player_start[1],
+                    image_path="assets/images/player_tank.png", scale=2
+                )
+                self.sprites.append(self.player)
+            else:
+                return
     
     def _update_widgets(self):
         for widget in self.widgets:
@@ -206,10 +219,17 @@ class Level(Scene):
                 widget.text = f"Kills: {self.kills}"
             elif widget.name == "points":
                 widget.text = f"Points: {self.points}"
+            elif widget.name == "lives":
+                lives_display = getattr(self, 'player_lives', None)
+                if lives_display is None and self.player is not None:
+                    lives_display = getattr(self.player, 'lives', 0)
+                widget.text = f"Lives: {lives_display}"
             widget.setup()
     
     def _check_game_over(self):
         if self.base and self.base.destroyed:
+            return f"GAME_OVER:{self.current_level}:{self.points}"
+        if hasattr(self, 'player_lives') and self.player_lives <= 0:
             return f"GAME_OVER:{self.current_level}:{self.points}"
         if self.kills >= self.KILLS_TO_WIN:
             return f"WIN:{self.current_level}:{self.points}"

@@ -7,6 +7,10 @@ from scenes.win import WinScene
 class Game:
     def __init__(self):
         pg.init()
+        try:
+            pg.mixer.init()
+        except Exception:
+            pass
         self.screen = pg.display.set_mode((800, 480))
         self.running = True
         self.menu = MainMenu()

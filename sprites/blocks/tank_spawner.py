@@ -11,7 +11,7 @@ class TankSpawner(Sprite):
         self.tank_options = tank_options
         self.timer = first_tank_spawn_time
         self.first_spawn = True
-        self.is_solid = True
+        self.is_solid = False
 
     def update(self, sprites, dt):
         self.timer -= dt

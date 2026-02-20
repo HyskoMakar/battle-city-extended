@@ -1,4 +1,5 @@
 import pygame as pg
+import random
 from sprites.sprite import Sprite
 from sprites.blocks.block import Block
 from sprites.blocks.base import Base
@@ -24,6 +25,8 @@ class Tank(Sprite):
             
             if isinstance(sprite, Block) and self.rect.colliderect(sprite.rect):
                 self._resolve_collision(sprite)
+                if hasattr(self, 'DIRECTIONS'):
+                    self.dir = random.choice(getattr(self, 'DIRECTIONS'))
             elif isinstance(sprite, Bush) and self.rect.colliderect(sprite.rect):
                 if self.__class__.__name__ != "Player":
                     self._resolve_collision(sprite)
@@ -37,7 +40,7 @@ class Tank(Sprite):
             return False
         if self.__class__.__name__ == "Player" and sprite.__class__.__name__ == "Base":
             return False
-        return self.__class__.__name__ == "Player"
+        return True
 
     def _resolve_collision(self, sprite):
         if self.dir == "left":

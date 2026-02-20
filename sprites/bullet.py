@@ -4,6 +4,18 @@ from sprites.tanks.tank import Tank
 from sprites.blocks.base import Base
 from sprites.blocks.block import Block
 
+_HIT_SOUND = None
+
+def _get_hit_sound():
+    hit = globals().get('_HIT_SOUND')
+    if hit is None:
+        try:
+            hit = pg.mixer.Sound("assets/sounds/hit.wav")
+        except Exception:
+            hit = None
+        globals()['_HIT_SOUND'] = hit
+    return hit
+
 class Bullet(Sprite):
     MAX_BLOCKS_DESTROYED = 2
     
@@ -37,14 +49,32 @@ class Bullet(Sprite):
                 
             if isinstance(sprite, Tank):
                 sprite.hp = 0
+                try:
+                    s = _get_hit_sound()
+                    if s:
+                        s.play()
+                except Exception:
+                    pass
                 return True
             elif isinstance(sprite, Base):
                 if self.owner.__class__.__name__ != "Player":
                     sprite.destroyed = True
+                    try:
+                        s = _get_hit_sound()
+                        if s:
+                            s.play()
+                    except Exception:
+                        pass
                     return True
             elif isinstance(sprite, Block):
                 result = self._handle_block_collision(sprite, blocks_to_remove)
                 if result:
+                    try:
+                        s = _get_hit_sound()
+                        if s:
+                            s.play()
+                    except Exception:
+                        pass
                     return result
         
         return blocks_to_remove if blocks_to_remove else False
